@@ -1,8 +1,10 @@
 extern crate wasm_bindgen;
 extern crate wee_alloc;
+// extern crate rand;
 
 use wasm_bindgen::prelude::*;
 use wee_alloc::WeeAlloc;
+// use rand::Rng;
 
 #[global_allocator]
 static ALLOC: WeeAlloc = WeeAlloc::INIT;
@@ -11,6 +13,50 @@ static ALLOC: WeeAlloc = WeeAlloc::INIT;
 #[wasm_bindgen]
 pub fn add(a: usize, b: usize) -> usize {
     a + b
+}
+
+#[wasm_bindgen]
+pub struct Field {
+    width: usize,
+    walls: Vec<usize>,
+    start_idx: usize,
+    end_idx: usize,
+}
+
+#[wasm_bindgen]
+impl Field {
+    pub fn new(width: usize ) -> Field {
+        let mut vec = vec![0; width * width];
+        for i in 0..(vec.len()) {
+            if i < width || i % width == 0 || i % width == width - 1 || i > vec.len() - width {
+                vec[i] = 1;
+            } 
+        }
+        Field {
+            width,
+            walls: vec,
+            start_idx: width + 1,
+            end_idx: width * width - width - 2,
+        }
+    }
+
+    pub fn width(&self) -> usize {
+        self.width
+	}
+
+    pub fn walls(&self) -> Vec<usize> {
+        self.walls.clone()
+	}
+
+    pub fn generate_maze(&self) -> Vec<usize> {
+        let mut walls = self.walls.clone();
+        let mut rng = rand::thread_rng();
+        let mut stack = Vec::new();
+        let mut current = self.start_idx;
+        let mut visited = vec![false; self.width * self.width];
+        visited[current] = true;
+        walls
+    }
 }
 
 // #[wasm_bindgen(module = "/www/utils/rnd.js")]
@@ -58,16 +104,11 @@ pub fn add(a: usize, b: usize) -> usize {
 // 	}
 // }
 
-// #[wasm_bindgen]
-// pub struct World {
-// 		width: usize,
-// 		size: usize,
-// 		snake: Snake,
-// 		next_cell: Option<SnakeCell>,
-// 		reward_cell: Option<usize>,
-// 		status: Option<GameStatus>,
-// 		points: usize,
-// }
+
+
+
+
+
 
 // #[wasm_bindgen]
 // impl World {

@@ -1,12 +1,30 @@
-import init, { add } from 'maze_wasm';
+import init, { Field } from 'maze_wasm';
 // import { rnd } from './utils/rnd';
 
 init().then((wasm:any) => {
-  const a = 3
-  const b = 5
-  const c = add(a, b)
+
+    const field = Field.new(9);
+
+    const width = field.width();
+    const walls = field.walls();
+
+    const walls2 = []
+    
+    for (let i = 0; i < width; i++) {
+        const row = [];
+        for (let j = 0; j < width; j++) {
+            row.push(walls[i * width + j]);
+        }
+        walls2.push(row);
+    }
+
+    console.log(walls2);
+
+  // const a = 3
+  // const b = 5
+  // const c = add(a, b)
   
-  console.log(c)
+  // console.log(c)
   // const CELL_SIZE = 20;
   // const WORLD_WIDTH = 8;
   // const SNAKE_SPAWN_IDX = rnd(WORLD_WIDTH * WORLD_WIDTH);
