@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "copy-webpack-plugin": "^11.0.0",
+    "maze_wasm": "file:../pkg",
     "ts-loader": "^9.4.1",
     "typescript": "^4.8.4",
     "webpack": "^5.74.0",

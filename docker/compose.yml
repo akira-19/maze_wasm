@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: '.'
+      context: './docker'
     ports:
       - 7070:7070
     volumes:
@@ -11,15 +11,15 @@ services:
       # - target-cache:/app/target
     command: /bin/sh -c "cargo watch -x run"
 
-  deno:
-    build:
-      context: .
-      dockerfile: Dockerfile.deno
-    command: bash -c "source ~/.bash_profile && deno run --allow-net --allow-read --allow-env server/index.ts"
-    ports:
-      - "8000:8000"
-    volumes:
-      - ..:/app
+  # deno:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.deno
+  #   command: bash -c "source ~/.bash_profile && deno run --allow-net --allow-read --allow-env server/index.ts"
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ..:/app
 volumes:
   cargo-cache:
   target-cache:
