@@ -2,7 +2,7 @@ import init, { Field } from 'maze_wasm';
 import { rnd } from './utils/rnd';
 
 init().then((wasm: any) => {
-  const field = Field.new(9);
+  const field = Field.new(7);
   const width = field.width();
   const walls = field.walls();
   const walls2 = [];
@@ -18,28 +18,30 @@ init().then((wasm: any) => {
 
   console.log(maze);
 
-  // const CELL_SIZE = 20;
+  const CELL_SIZE = 20;
   // const WORLD_WIDTH = 8;
   // const SNAKE_SPAWN_IDX = rnd(WORLD_WIDTH * WORLD_WIDTH);
   // const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
   // const worldWidth = world.width();
   // const gameStatus = document.getElementById('game-status');
   // const points = document.getElementById('points');
-  // const gameControlBtn = document.getElementById('game-control-btn');
-  // const canvas = <HTMLCanvasElement>document.getElementById('snake-canvas');
-  // const ctx = canvas.getContext('2d');
-  // canvas.height = worldWidth * CELL_SIZE;
-  // canvas.width = worldWidth * CELL_SIZE;
-  // gameControlBtn.addEventListener('click', (_) => {
-  //   const status = world.game_status();
-  //   if (status === undefined) {
-  //     gameControlBtn.textContent = 'Playing...';
-  //     world.start_game();
-  //     play();
-  //   } else {
-  //     location.reload();
-  //   }
-  // });
+  const gameControlBtn = document.getElementById('game-control-btn');
+  const canvas = <HTMLCanvasElement>document.getElementById('maze-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.height = width * CELL_SIZE;
+  canvas.width = width * CELL_SIZE;
+  gameControlBtn.addEventListener('click', (_) => {
+    drawField();
+    drawIndex();
+    // const status = world.game_status();
+    // if (status === undefined) {
+    //   gameControlBtn.textContent = 'Playing...';
+    //   world.start_game();
+    //   play();
+    // } else {
+    //   location.reload();
+    // }
+  });
   // const snakeCellPtr = world.snake_cells();
   // const snakeLen = world.snake_length();
   // const snakeCells = new Uint32Array(
@@ -53,19 +55,30 @@ init().then((wasm: any) => {
   //   e.code === 'ArrowLeft' && world.change_snake_dir(Direction.Left);
   //   e.code === 'ArrowRight' && world.change_snake_dir(Direction.Right);
   // });
-  // function drawWorld() {
-  //   if (ctx === null) return;
-  //   ctx.beginPath();
-  //   for (let x = 0; x < worldWidth + 1; x++) {
-  //     ctx.moveTo(CELL_SIZE * x, 0);
-  //     ctx.lineTo(CELL_SIZE * x, CELL_SIZE * worldWidth);
-  //   }
-  //   for (let y = 0; y < worldWidth + 1; y++) {
-  //     ctx.moveTo(0, CELL_SIZE * y);
-  //     ctx.lineTo(CELL_SIZE * worldWidth, CELL_SIZE * y);
-  //   }
-  //   ctx.stroke();
-  // }
+  ctx.font = '12px serif';
+  function drawField() {
+    if (ctx === null) return;
+    ctx.beginPath();
+    for (let x = 0; x < width + 1; x++) {
+      ctx.moveTo(CELL_SIZE * x, 0);
+      ctx.lineTo(CELL_SIZE * x, CELL_SIZE * width);
+    }
+    for (let y = 0; y < width + 1; y++) {
+      ctx.moveTo(0, CELL_SIZE * y);
+      ctx.lineTo(CELL_SIZE * width, CELL_SIZE * y);
+    }
+    ctx.stroke();
+  }
+
+  function drawIndex() {
+    if (ctx === null) return;
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < width; y++) {
+        ctx.fillText(`${x + y * width}`, x * CELL_SIZE + 2, (y+1) * CELL_SIZE);
+      }
+    }
+  }
+
   // function drawReward() {
   //   const idx = world.reward_cell();
   //   const col = idx % worldWidth;

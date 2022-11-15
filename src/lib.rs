@@ -10,6 +10,7 @@ static ALLOC: WeeAlloc = WeeAlloc::INIT;
 #[wasm_bindgen(module = "/www/utils/rnd.js")]
 extern "C" {
     fn rnd(max: usize) -> usize;
+    fn log(s: &str);
 }
 
 pub enum Direction {
@@ -83,7 +84,7 @@ impl Field {
                 }
             }
             Direction::Up => {
-                if current_idx < self.width {
+                if current_idx < self.width * 2 - 1 {
                     return 0;
                 } else {
                     return current_idx - self.width;
@@ -99,7 +100,7 @@ impl Field {
         }
     }
 
-    fn check_cell_makable(&self, walls: Vec<usize>, next_cell_idx: usize) -> bool {
+    fn check_cell_makable(&self, walls: &Vec<usize>, next_cell_idx: usize) -> bool {
         let mut count = 0;
         for i in 0..4 {
             let direction = Field::num_to_direction(i);
@@ -107,40 +108,50 @@ impl Field {
             if next_cell == 0 {
                 continue;
             }
-            if walls[next_cell] == 0 {
+            if walls[next_cell_idx] == 0 {
                 count += 1;
             }
         }
-        if count == 1 {
-            return true;
-        } else {
-            return false;
-        }
+
+        count == 1
     }
 
-    pub fn generate_maze(&self) {
+    pub fn generate_maze(&mut self) {
         let mut walls = vec![1; self.width * self.width];
         walls[self.start_idx] = 0;
         let mut current = self.start_idx;
         let mut try_count: usize = 0;
+        let mut counter:usize = 0;
+
+
 
         while current != self.end_idx {
             let next_dir = Field::num_to_direction(rnd(4));
             let next_cell_idx = self.get_next_cell(current, next_dir);
+            counter += 1;
+            if counter > 100 {
+                log("counter");
+                break;
+            }
             if try_count > 5 {
                 current = self.start_idx;
                 walls = vec![1; self.width * self.width];
+                log("retry1");
+                try_count = 0;
                 continue;
             }
-            if next_cell_idx != 0 && Field::check_cell_makable(self, walls, next_cell_idx) {
+            if next_cell_idx != 0 && Field::check_cell_makable(self, &walls, next_cell_idx) {
                 walls[next_cell_idx] = 0;
                 current = next_cell_idx;
                 try_count = 0;
+                log(current.to_string().as_str());
             } else {
                 try_count += 1;
+                log("retry2");
                 continue;
             }
         }
 
-        self.walls = vec![walls]
+        self.walls = walls;
     }
+}
