@@ -1,60 +1,48 @@
-import init, { Field } from 'maze_wasm';
+import init, { Field, Direction, GameStatus } from 'maze_wasm';
 import { rnd } from './utils/rnd';
 
 init().then((wasm: any) => {
-  const field = Field.new(7);
+  const fieldSize = 19;
+  const field = Field.new(fieldSize);
   const width = field.width();
-  const walls = field.walls();
-  const walls2 = [];
-  for (let i = 0; i < width; i++) {
-    const row = [];
-    for (let j = 0; j < width; j++) {
-      row.push(walls[i * width + j]);
-    }
-    walls2.push(row);
-  }
-
-  const maze = field.generate_maze();
-
-  console.log(maze);
+  const startIdx = fieldSize + 1;
+  const goalIdx = (fieldSize + 1) * (fieldSize - 2);
+  let player_idx = field.player_idx();
+  let time: number;
 
   const CELL_SIZE = 20;
-  // const WORLD_WIDTH = 8;
-  // const SNAKE_SPAWN_IDX = rnd(WORLD_WIDTH * WORLD_WIDTH);
-  // const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
-  // const worldWidth = world.width();
-  // const gameStatus = document.getElementById('game-status');
-  // const points = document.getElementById('points');
+
   const gameControlBtn = document.getElementById('game-control-btn');
   const canvas = <HTMLCanvasElement>document.getElementById('maze-canvas');
   const ctx = canvas.getContext('2d');
   canvas.height = width * CELL_SIZE;
   canvas.width = width * CELL_SIZE;
   gameControlBtn.addEventListener('click', (_) => {
+    if (field.status() !== GameStatus.BeforePlaying) return;
+    time = new Date().getTime();
+    field.generate_maze();
     drawField();
-    drawIndex();
-    // const status = world.game_status();
-    // if (status === undefined) {
-    //   gameControlBtn.textContent = 'Playing...';
-    //   world.start_game();
-    //   play();
-    // } else {
-    //   location.reload();
-    // }
+    colorWalls();
+    colorGoal();
+    colorPlayer();
   });
-  // const snakeCellPtr = world.snake_cells();
-  // const snakeLen = world.snake_length();
-  // const snakeCells = new Uint32Array(
-  //   wasm.memory.buffer,
-  //   snakeCellPtr,
-  //   snakeLen,
-  // );
-  // document.addEventListener('keydown', (e) => {
-  //   e.code === 'ArrowUp' && world.change_snake_dir(Direction.Up);
-  //   e.code === 'ArrowDown' && world.change_snake_dir(Direction.Down);
-  //   e.code === 'ArrowLeft' && world.change_snake_dir(Direction.Left);
-  //   e.code === 'ArrowRight' && world.change_snake_dir(Direction.Right);
-  // });
+
+  document.addEventListener('keydown', (e) => {
+    if (field.status() !== GameStatus.Playing) return;
+    e.code === 'ArrowUp' && field.move_player(Direction.Up);
+    e.code === 'ArrowDown' && field.move_player(Direction.Down);
+    e.code === 'ArrowLeft' && field.move_player(Direction.Left);
+    e.code === 'ArrowRight' && field.move_player(Direction.Right);
+    resetPlayerColor();
+    colorPlayer();
+
+    if (field.status() === GameStatus.Done) {
+      setTimeout(() => {
+        const timeDiff = Math.floor((new Date().getTime() - time) / 1000);
+        alert(`Your Record is ${timeDiff} seconds!`);
+      }, 100);
+    }
+  });
   ctx.font = '12px serif';
   function drawField() {
     if (ctx === null) return;
@@ -70,74 +58,42 @@ init().then((wasm: any) => {
     ctx.stroke();
   }
 
-  function drawIndex() {
+  function colorWalls() {
     if (ctx === null) return;
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < width; y++) {
-        ctx.fillText(`${x + y * width}`, x * CELL_SIZE + 2, (y+1) * CELL_SIZE);
+    const walls = field.walls();
+    for (let i = 0; i < width * width; i++) {
+      if (walls[i] === 1) {
+        const x = i % width;
+        const y = Math.floor(i / width);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       }
     }
   }
 
-  // function drawReward() {
-  //   const idx = world.reward_cell();
-  //   const col = idx % worldWidth;
-  //   const row = Math.floor(idx / worldWidth);
-  //   ctx.beginPath();
-  //   ctx.fillStyle = '#FF0000';
-  //   ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-  //   ctx.stroke();
-  // }
-  // function drawSnake() {
-  //   const snakeCells = new Uint32Array(
-  //     wasm.memory.buffer,
-  //     world.snake_cells(),
-  //     world.snake_length(),
-  //   );
-  //   snakeCells
-  //     // .filter((cellIdx, i) => {
-  //     //   i > 0 && cellIdx === snakeCells[0];
-  //     // })
-  //     .slice()
-  //     .reverse()
-  //     .forEach((cellIdx, i) => {
-  //       const col = cellIdx % worldWidth;
-  //       const row = Math.floor(cellIdx / worldWidth);
-  //       ctx.fillStyle = i === snakeCells.length - 1 ? '#7878db' : '#000000';
-  //       ctx.beginPath();
-  //       ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-  //     });
-  //   ctx.stroke();
-  // }
-  // function drawGameStatus() {
-  //   const status = world.game_status();
-  //   gameStatus.textContent = world.game_status_text();
-  //   points.textContent = world.points().toString();
-  //   if (status === GameStatus.Won || status === GameStatus.Lost) {
-  //     gameControlBtn.textContent = 'Re-Play';
-  //   }
-  // }
-  // function paint() {
-  //   drawWorld();
-  //   drawSnake();
-  //   drawReward();
-  //   drawGameStatus();
-  // }
-  // function play() {
-  //   const status = world.game_status();
-  //   if (status === GameStatus.Won || status === GameStatus.Lost) {
-  //     gameControlBtn.textContent = 'Re-Play';
-  //     return;
-  //   }
-  //   if (ctx === null) return;
-  //   const fps = 5;
-  //   setTimeout(() => {
-  //     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //     world.step();
-  //     paint();
-  //     // the method takes a callback to invoke before the next repaint
-  //     requestAnimationFrame(play);
-  //   }, 1000 / fps);
-  // }
-  // paint();
+  function colorGoal() {
+    if (ctx === null) return;
+    const x = goalIdx % width;
+    const y = Math.floor(goalIdx / width);
+    ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+    ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  }
+
+  function colorPlayer() {
+    if (ctx === null) return;
+    const x = field.player_idx() % width;
+    const y = Math.floor(field.player_idx() / width);
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+    ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    ctx.stroke();
+  }
+
+  function resetPlayerColor() {
+    if (ctx === null) return;
+    const x = player_idx % width;
+    const y = Math.floor(player_idx / width);
+    ctx.fillStyle = 'rgb(255, 255, 255)';
+    ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    player_idx = field.player_idx();
+  }
 });
